@@ -1,11 +1,11 @@
 from __future__ import annotations
+from typing import Any
 import numpy as np
 from numpy import dtype
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.manifold import TSNE
 from scipy.spatial.distance import cosine
 import plotly.graph_objects as go
-from typing import Any
 
 
 def cosine_sim(A, B) -> Any:
