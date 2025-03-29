@@ -1,5 +1,5 @@
 def closest(word_bank: list[tuple[str, str]], target: tuple[str, str]) -> list[tuple[str, str]]:
-    return sorted(word_bank, key=lambda x: closeness(x, target))[:5]
+    return sorted(word_bank, key=lambda x: closeness(x, target), reverse=True)[:5]
 
 
 def closeness(word1: tuple[str, str], word2: tuple[str, str]) -> int:

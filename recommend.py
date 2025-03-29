@@ -51,7 +51,7 @@ def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table:
     # Visual
     x_coords = vis_features[:, 0]
     y_coords = vis_features[:, 1]
-    hover_data = [" by ".join(name_table[i]) for i in ids]
+    hover_data = [" by ".join(name_table[i]).title() for i in ids]
     colors = communities
 
     fig = px.scatter(
@@ -67,7 +67,7 @@ def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table:
     idx = ids.index(song_id)
     x_coord = x_coords[idx]
     y_coord = y_coords[idx]
-    label = "by ".join(name_table[song_id])
+    label = " by ".join(name_table[song_id]).title()
 
     fig.add_annotation(
         x = x_coord,

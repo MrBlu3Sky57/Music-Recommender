@@ -94,9 +94,9 @@ class SongGraph:
             new_state = np.dot(adj_matrix.T, state)
             state = (1 - alpha) * state + alpha * new_state
         self.apply_naive_scores(ids, seed_id, state, soft_table)
-        return state
+        return state / np.max(state)
     
-    def apply_naive_scores(self, ids: list[Any], song_id: Any, state: np.ndarray[Any, dtype], soft_table: dict[Any, np.ndarray[Any, dtype]], bias: int =0.01) -> None:
+    def apply_naive_scores(self, ids: list[Any], song_id: Any, state: np.ndarray[Any, dtype], soft_table: dict[Any, np.ndarray[Any, dtype]], bias: int =0.02) -> None:
         for i in range(state.shape[0]):
             if soft_table[ids[i]][0] == soft_table[song_id][0]:
                 state[i] += bias
@@ -104,7 +104,7 @@ class SongGraph:
                 state[i] += bias
             if soft_table[ids[i]][3] == soft_table[song_id][3]:
                 state[i] += bias
-            state[i] += (float(soft_table[ids[i]][1]) / 100) * bias
+            state[i] += (float(soft_table[ids[i]][1]) / 100) * bias / 2
 
     def recommendations(self, song_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]],  soft_table: dict[Any, np.ndarray[Any, dtype]], name_table: dict[Any, Any], limit: int=10) -> list[Any]:
         """Return recommendations based on graph diffusion"""
@@ -143,7 +143,7 @@ class SongGraph:
                     size=5,
                     color=state, 
                     colorscale='Viridis',
-                    colorbar=dict(title="Heat")
+                    colorbar=dict(title="Similarity")
                 ),
                 text=hover_data,
                 hoverinfo="text"

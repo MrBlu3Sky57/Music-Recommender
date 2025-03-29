@@ -11,8 +11,8 @@ ID_IDX = np.array([16, 17, 7])
 SOFT_IDX = np.array([3, 10, 14, 26])
 
 def clean_text(value):
-    # value = re.sub(r'feat\.[^a-zA-Z0-9]', ',', value)
     value = re.sub(r'[^a-zA-Z0-9\s,]', '', value)
+    # value = re.sub(r'\b(featuring|feat\.?|with|&|x)\b', 'feat.', value, flags=re.IGNORECASE)
     return str.lower(value)
 
 def replace_non_numeric(value):
@@ -55,6 +55,7 @@ def build_tables(normed_vectors: np.ndarray[Any, dtype],
     name_table = dict()
     soft_table = dict()
     for i in range(0, normed_vectors.shape[0]):
+        # if (clean_text(identifiers[i, 1]), clean_text(identifiers[i, 2])) not in name_table.values():
         vector_table[identifiers[i, 0]] = normed_vectors[i, :]
         name_table[identifiers[i, 0]] = (clean_text(identifiers[i, 1]), clean_text(identifiers[i, 2]))
         soft_table[identifiers[i, 0]] = soft_attributes[i, :]
