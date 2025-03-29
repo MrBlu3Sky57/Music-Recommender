@@ -1,3 +1,5 @@
+""" A module containing a cosine similarity function and a Song Graph class with built-in diffusion and visualization capabilities"""
+
 from __future__ import annotations
 from typing import Any
 import numpy as np
@@ -8,7 +10,13 @@ from scipy.spatial.distance import cosine
 import plotly.graph_objects as go
 
 
-def cosine_sim(A, B) -> Any:
+def cosine_sim(A: np.ndarray[Any, dtype], B: np.ndarray[Any, dtype]) -> Any:
+    """ 
+    Return the cosine between two numpy arrays
+    
+    Preconditions:
+    - A and B are broadcastable
+    """
     return 1 - cosine(A, B)
 
 class _Vertex:
@@ -44,6 +52,7 @@ class SongGraph:
     #     - _threshold:
     #        - A numeric threshold which determines whether two vertices are connected by an edge
     _vertices: dict[Any, _Vertex]
+    _threshold: float
 
     def __init__(self, ids: np.ndarray[Any, dtype], vector_table: dict[Any, np.ndarray[Any, dtype]], threshold: int = 0.95) -> None:
         """Generate a song graph with the given song ids, vector table and name table"""
@@ -97,6 +106,8 @@ class SongGraph:
         return state / np.max(state)
     
     def apply_naive_scores(self, ids: list[Any], song_id: Any, state: np.ndarray[Any, dtype], soft_table: dict[Any, np.ndarray[Any, dtype]], bias: int =0.02) -> None:
+        """ Apply naive scores to each songs diffused state, where a song gets an increased score if it has high popularity, or is in the same playlist,
+        genre or subgenre as the song corresponding to the song id"""
         for i in range(state.shape[0]):
             if soft_table[ids[i]][0] == soft_table[song_id][0]:
                 state[i] += bias
@@ -123,36 +134,52 @@ class SongGraph:
         return vis_features
     
     def visualize_heat_map(self, song_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], soft_table: dict[Any, np.ndarray[Any, dtype]], name_table: dict[Any, Any]) -> bool:
-            state = list(self.diffusion(seed_id=song_id, vector_table=vector_table, soft_table=soft_table))
-            id_list = list(self._vertices.keys())
-            idx = id_list.index(song_id)
-            state.pop(idx)
-            if len(id_list) <= 1:
-                return False
-            vis_features = self.emb_features(vector_table=vector_table, song_id=song_id)
+        """ Visualize the graph, displaying how similar each node is to the target node"""
+        state = list(self.diffusion(seed_id=song_id, vector_table=vector_table, soft_table=soft_table))
+        id_list = list(self._vertices.keys())
+        if len(id_list) <= 1:
+            return False
+        vis_features = self.emb_features(vector_table=vector_table, song_id=song_id)
 
-            x_coords = vis_features[:, 0]
-            y_coords = vis_features[:, 1]
-            hover_data = [name_table[i] for i in self._vertices if i != song_id]
+        x_coords = vis_features[:, 0]
+        y_coords = vis_features[:, 1]
+        hover_data = [name_table[i] for i in self._vertices]
 
-            fig = go.Figure(data=go.Scatter(
-                x=x_coords, 
-                y=y_coords, 
-                mode='markers',
-                marker=dict(
-                    size=5,
-                    color=state, 
-                    colorscale='Viridis',
-                    colorbar=dict(title="Similarity")
-                ),
-                text=hover_data,
-                hoverinfo="text"
-            ))
-            fig.update_layout(
-                title="Song Communities Visualization",
-                xaxis_title="TSNE Component 1",
-                yaxis_title="TSNE Component 2"
-            )
+        fig = go.Figure(data=go.Scatter(
+            x=x_coords, 
+            y=y_coords, 
+            mode='markers',
+            marker=dict(
+                size=5,
+                color=state, 
+                colorscale='Viridis',
+                colorbar=dict(title="Similarity")
+            ),
+            text=hover_data,
+            hoverinfo="text"
+        ))
+        fig.update_layout(
+            title="Song Communities Visualization",
+            xaxis_title="TSNE Component 1",
+            yaxis_title="TSNE Component 2"
+        )
 
-            fig.show()
-            return True
+        idx = id_list.index(song_id)
+        x_coord = x_coords[idx]
+        y_coord = y_coords[idx]
+        label = " by ".join(name_table[song_id]).title()
+
+        fig.add_annotation(
+            x = x_coord,
+            y = y_coord,
+            text = label,
+            showarrow=True,
+            arrowhead=4,
+            font=dict(size=10, color='black'),
+            bgcolor='white',
+            bordercolor='black',
+            borderwidth=1
+        )
+
+        fig.show()
+        return True

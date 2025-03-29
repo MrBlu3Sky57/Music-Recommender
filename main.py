@@ -1,3 +1,7 @@
+"""
+Main file where user interaction is facilitated
+"""
+
 import numpy as np
 from Graph import SongGraph
 import parse
@@ -27,7 +31,7 @@ if __name__ == '__main__':
             print('Did you mean one of the following?')
             candidates = match.closest(list(id_table.keys()), target)
             for i, candidate in enumerate(candidates):
-                print(f"{i + 1}. {" by ".join(candidate)}")
+                print(f"{i + 1}. {" by ".join(candidate).title()}")
             print("0. None of the above")
             
             while True:

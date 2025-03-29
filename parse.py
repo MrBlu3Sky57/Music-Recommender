@@ -1,4 +1,4 @@
-""" DOCSTRING... """
+""" Module containing functions that clean file data and parse into useful datastructures"""
 
 import csv
 from typing import Any
@@ -10,12 +10,13 @@ VECTOR_IDX = np.array([0, 1, 2, 4, 5, 6, 9, 19, 23, 24])
 ID_IDX = np.array([16, 17, 7])
 SOFT_IDX = np.array([3, 10, 14, 26])
 
-def clean_text(value):
+def clean_text(value: str) -> str:
+    """ Filter out unwanted characters in string and convert to lower case"""
     value = re.sub(r'[^a-zA-Z0-9\s,]', '', value)
-    # value = re.sub(r'\b(featuring|feat\.?|with|&|x)\b', 'feat.', value, flags=re.IGNORECASE)
     return str.lower(value)
 
-def replace_non_numeric(value):
+def replace_non_numeric(value: str) -> float:
+    """ Convert a string to float, if string cannot be converted set value to 0.0"""
     try:
         return float(value)
     except ValueError:
@@ -31,7 +32,7 @@ def parse_file(file: str = 'high_popularity_spotify_data.csv', vector_idx: np.nd
         lines = csv.reader(file)
         for line in lines:
             data.append(line)
-    data = np.array(data)
+    data = np.array(data, dtype=str)
 
     return np.vectorize(replace_non_numeric)(data[1:, vector_idx]), data[1:, id_idx], data[1:, soft_idx]
 
@@ -48,7 +49,7 @@ def normalize(feature_vectors: np.ndarray[Any, dtype]) -> ndarray[Any, dtype]:
 
 def build_tables(normed_vectors: np.ndarray[Any, dtype],
                  identifiers: np.ndarray[Any, dtype], soft_attributes: np.ndarray[Any, dtype]) -> tuple[Any, Any, Any, Any]:
-    """ Build look up tables for data
+    """ Build look up tables for data, and remove any duplicate song names
     """
 
     vector_table = dict()

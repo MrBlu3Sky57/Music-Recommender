@@ -1,3 +1,5 @@
+""" Module containing functions for building, partitioning and visualization networkx graphs"""
+
 from __future__ import annotations
 from typing import Any
 from numpy import dtype
@@ -9,6 +11,8 @@ import plotly.express as px
 import community
 
 def build_nx(ids: list[Any], vector_table: dict[Any, np.ndarray[Any, dtype]], threshold: float = 0.33, k: int = 15) -> nx.graph:
+    """ Build a networkx graph from the given ids and their corresponding vector embeddings. Edges by taking the k nearest neighbours of a node and
+        forming edges with the nodes that have a similarity above the threshold """
     vectors = np.array([vector_table[i] for i in ids])
     tree = KDTree(vectors, metric='euclidean')
     distances, indices = tree.query(vectors, k=k+1)
@@ -25,6 +29,8 @@ def build_nx(ids: list[Any], vector_table: dict[Any, np.ndarray[Any, dtype]], th
     return g
 
 def partition_graph(graph: nx.Graph) -> tuple[dict[Any, int], dict[int, Any]]:
+    """ Partition graph into separate communities, returning two mappings: one mapping each node to its community
+    and another mapping each community number to the set of nodes in it"""
     components = community.best_partition(graph, resolution=1.2, random_state=42)
     cluster_dict = {}
     for i, cluster_val in components.items():
@@ -34,9 +40,9 @@ def partition_graph(graph: nx.Graph) -> tuple[dict[Any, int], dict[int, Any]]:
             cluster_dict[cluster_val] = [i]
     return components, cluster_dict
 
-def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table: dict[Any, Any], partition: dict[Any, int], song_id: Any) -> bool:
+def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table: dict[Any, Any], partition: dict[Any, int], song_id: str) -> bool:
     """
-    Visualize Graph.
+    Visualize networkx graph based on the given partition of the graph, and label the corresponding song name of the song id
     """
     ids = list(graph.nodes())
     feature_matrix = np.array([vector_table[i] for i in ids])
