@@ -44,12 +44,11 @@ class SongGraph:
     #     - _threshold:
     #        - A numeric threshold which determines whether two vertices are connected by an edge
     _vertices: dict[Any, _Vertex]
-    _threshold: float = 0.0
 
-    def __init__(self, ids: np.ndarray[Any, dtype], vector_table: dict[Any, np.ndarray[Any, dtype]]) -> None:
+    def __init__(self, ids: np.ndarray[Any, dtype], vector_table: dict[Any, np.ndarray[Any, dtype]], threshold: int = 0.95) -> None:
         """Generate a song graph with the given song ids, vector table and name table"""
         self._vertices = {}
-        self._threshold = 0.95
+        self._threshold = threshold
         self._add_vertices(ids, vector_table)
 
     def _add_vertices(self, ids: np.ndarray[Any, dtype], vector_table: dict[Any, np.ndarray[Any, dtype]]) -> None:
@@ -80,7 +79,7 @@ class SongGraph:
         """ Return adjacency matrix of the graph"""
         return (similarity_matrix >= self._threshold).astype(float)
     
-    def diffusion(self, seed_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], alpha: float=0.85, iterations: int=5) -> list:
+    def diffusion(self, seed_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]],  soft_table: dict[Any, np.ndarray[Any, dtype]], alpha: float=0.85, iterations: int=8) -> list:
         """ Return a diffused state for each song in the graph"""
         adj_matrix = self.adjacency_matrix(self.similarity_matrix(vector_table))
         row_sums = adj_matrix.sum(axis=1, keepdims=True)
@@ -94,11 +93,22 @@ class SongGraph:
         for _ in range(iterations):
             new_state = np.dot(adj_matrix.T, state)
             state = (1 - alpha) * state + alpha * new_state
+        self.apply_naive_scores(ids, seed_id, state, soft_table)
         return state
     
-    def recommendations(self, song_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], name_table: dict[Any, Any], limit: int=10) -> list[Any]:
+    def apply_naive_scores(self, ids: list[Any], song_id: Any, state: np.ndarray[Any, dtype], soft_table: dict[Any, np.ndarray[Any, dtype]], bias: int =0.01) -> None:
+        for i in range(state.shape[0]):
+            if soft_table[ids[i]][0] == soft_table[song_id][0]:
+                state[i] += bias
+            if soft_table[ids[i]][2] == soft_table[song_id][2]:
+                state[i] += bias
+            if soft_table[ids[i]][3] == soft_table[song_id][3]:
+                state[i] += bias
+            state[i] += (float(soft_table[ids[i]][1]) / 100) * bias
+
+    def recommendations(self, song_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]],  soft_table: dict[Any, np.ndarray[Any, dtype]], name_table: dict[Any, Any], limit: int=10) -> list[Any]:
         """Return recommendations based on graph diffusion"""
-        state = self.diffusion(song_id, vector_table)
+        state = self.diffusion(song_id, vector_table, soft_table)
         sorted_list = np.argsort(state)[::-1][:(limit + 1)]
         ids = list(self._vertices.keys())
         return [name_table[ids[i]] for i in sorted_list if ids[i] != song_id]
@@ -111,8 +121,9 @@ class SongGraph:
         vis_features = tsne.fit_transform(feature_matrix)
 
         return vis_features
-    def visualize_heat_map(self, song_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], name_table: dict[Any, Any]) -> bool:
-            state = list(self.diffusion(seed_id=song_id, vector_table=vector_table))
+    
+    def visualize_heat_map(self, song_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], soft_table: dict[Any, np.ndarray[Any, dtype]], name_table: dict[Any, Any]) -> bool:
+            state = list(self.diffusion(seed_id=song_id, vector_table=vector_table, soft_table=soft_table))
             id_list = list(self._vertices.keys())
             idx = id_list.index(song_id)
             state.pop(idx)
