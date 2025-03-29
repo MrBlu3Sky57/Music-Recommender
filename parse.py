@@ -11,8 +11,8 @@ ID_IDX = np.array([16, 17, 7])
 SOFT_IDX = np.array([3, 10, 14, 26])
 
 def clean_text(value):
-    value = re.sub(r'feat\.[^a-zA-Z0-9]', '', value)
-    value = re.sub(r'[^a-zA-Z0-9\s]', '', value)
+    # value = re.sub(r'feat\.[^a-zA-Z0-9]', ',', value)
+    value = re.sub(r'[^a-zA-Z0-9\s,]', '', value)
     return str.lower(value)
 
 def replace_non_numeric(value):

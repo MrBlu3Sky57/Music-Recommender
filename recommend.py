@@ -34,26 +34,24 @@ def partition_graph(graph: nx.Graph) -> tuple[dict[Any, int], dict[int, Any]]:
             cluster_dict[cluster_val] = [i]
     return components, cluster_dict
 
-def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table: dict[Any, Any]) -> bool:
+def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table: dict[Any, Any], partition: dict[Any, int], song_id: Any) -> bool:
     """
     Visualize Graph.
     """
-    feature_matrix = np.array([vector_table[i] for i in graph.nodes()])
+    ids = list(graph.nodes())
+    feature_matrix = np.array([vector_table[i] for i in ids])
     if feature_matrix.shape[0] == 1:
         return False
 
     perplexity = min(30.0, feature_matrix.shape[0])
     tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
     vis_features = tsne.fit_transform(feature_matrix)
-
-    partition, cluster_dict = partition_graph(graph)
-    print(len(cluster_dict))
-    communities = [partition[node] for node in graph.nodes()]
+    communities = [partition[node] for node in ids]
 
     # Visual
     x_coords = vis_features[:, 0]
     y_coords = vis_features[:, 1]
-    hover_data = [name_table[i] for i in graph.nodes()]
+    hover_data = [" by ".join(name_table[i]) for i in ids]
     colors = communities
 
     fig = px.scatter(
@@ -62,8 +60,26 @@ def visualize(graph: nx.Graph, vector_table: np.ndarray[Any, dtype], name_table:
         color=colors,
         hover_name=hover_data,
         title="Song Communities Visualization",
-        labels={'x': 'PCA Component 1', 'y': 'PCA Component 2'}
+        labels={'x': 'TSNE Component 1', 'y': 'TSNE Component 2'}
     )
     fig.update_traces(marker=dict(size=5))
+
+    idx = ids.index(song_id)
+    x_coord = x_coords[idx]
+    y_coord = y_coords[idx]
+    label = "by ".join(name_table[song_id])
+
+    fig.add_annotation(
+        x = x_coord,
+        y = y_coord,
+        text = label,
+        showarrow=True,
+        arrowhead=4,
+        font=dict(size=10, color='black'),
+        bgcolor='white',
+        bordercolor='black',
+        borderwidth=1
+    )
+
     fig.show()
     return True
