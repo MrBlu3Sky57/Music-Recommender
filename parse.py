@@ -54,12 +54,21 @@ def build_tables(normed_vectors: np.ndarray[Any, dtype],
     vector_table = dict()
     name_table = dict()
     soft_table = dict()
+    seen_keys = set()
+    ids = []
     for i in range(0, normed_vectors.shape[0]):
-        # if (clean_text(identifiers[i, 1]), clean_text(identifiers[i, 2])) not in name_table.values():
-        vector_table[identifiers[i, 0]] = normed_vectors[i, :]
-        name_table[identifiers[i, 0]] = (clean_text(identifiers[i, 1]), clean_text(identifiers[i, 2]))
-        soft_table[identifiers[i, 0]] = soft_attributes[i, :]
+        song_name = clean_text(identifiers[i, 1])
+        artist_name = clean_text(identifiers[i, 2])
+        key = (song_name, artist_name)
 
-    return (identifiers[:, 0], vector_table, name_table, soft_table)
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        vector_table[identifiers[i, 0]] = normed_vectors[i, :]
+        name_table[identifiers[i, 0]] = key
+        soft_table[identifiers[i, 0]] = soft_attributes[i, :]
+        ids.append(identifiers[i, 0])
+
+    return (np.array(ids), vector_table, name_table, soft_table)
 
 
