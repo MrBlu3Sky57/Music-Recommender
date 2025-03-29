@@ -80,7 +80,7 @@ class SongGraph:
         """ Return adjacency matrix of the graph"""
         return (similarity_matrix >= self._threshold).astype(float)
     
-    def diffusion(self, seed_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], alpha: float=0.85, iterations: int=10) -> list:
+    def diffusion(self, seed_id: Any, vector_table: dict[Any, np.ndarray[Any, dtype]], alpha: float=0.85, iterations: int=5) -> list:
         """ Return a diffused state for each song in the graph"""
         adj_matrix = self.adjacency_matrix(self.similarity_matrix(vector_table))
         row_sums = adj_matrix.sum(axis=1, keepdims=True)
@@ -127,14 +127,14 @@ class SongGraph:
             fig = go.Figure(data=go.Scatter(
                 x=x_coords, 
                 y=y_coords, 
-                mode='markers',  # Ensures it's a scatter plot
+                mode='markers',
                 marker=dict(
                     size=5,
-                    color=state,  # Set color based on the diffusion values
-                    colorscale='Viridis',  # Change if needed
+                    color=state, 
+                    colorscale='Viridis',
                     colorbar=dict(title="Heat")
                 ),
-                text=hover_data,  # Set hover text
+                text=hover_data,
                 hoverinfo="text"
             ))
             fig.update_layout(

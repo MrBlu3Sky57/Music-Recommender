@@ -30,7 +30,7 @@ def build_nx(ids: list[Any], vector_table: dict[Any, np.ndarray[Any, dtype]], th
     return g
 
 def partition_graph(graph: nx.Graph) -> tuple[dict[Any, int], dict[int, Any]]:
-    components = community.best_partition(graph)
+    components = community.best_partition(graph, resolution=1.8)
     cluster_dict = {}
     for i, cluster_val in components.items():
         if cluster_val in cluster_dict:
@@ -86,7 +86,8 @@ if __name__ == '__main__':
     g = build_nx(ids, vector_table)
     visualize(g, vector_table, name_table)
     partition, cluster_dict = partition_graph(g)
-    song = id_table['Die With A Smile']
+    print(len(id_table))
+    song = id_table['Guess featuring billie eilish']
     com = partition[song]
     graph = SongGraph(np.array(list(cluster_dict[com])), vector_table)
     graph.visualize_heat_map(song, vector_table, name_table)
